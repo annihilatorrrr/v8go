@@ -34,26 +34,20 @@ v8_include_path = os.path.join(v8_path, "include")
 deps_include_path = os.path.join(deps_path, "include")
 
 def get_directories_names(path):
-  flist = []
-  for p in pathlib.Path(path).iterdir():
-    if p.is_dir():
-        flist.append(p.name)
+  flist = [p.name for p in pathlib.Path(path).iterdir() if p.is_dir()]
   return sorted(flist)
 
 def package_name(package, index, total):
   name = f'_ "rogchap.com/v8go/deps/include/{package}"'
-  if (index + 1 == total):
-    return name
-  else:
-    return name + '\n'
+  return name if (index + 1 == total) else name + '\n'
 
 def create_include_vendor_file(src_path, directories):
-  package_names = []
   total_directories = len(directories)
 
-  for index, directory_name in enumerate(directories):
-    package_names.append(package_name(directory_name, index, total_directories))
-
+  package_names = [
+      package_name(directory_name, index, total_directories)
+      for index, directory_name in enumerate(directories)
+  ]
   with open(os.path.join(src_path, 'vendor.go'), 'w') as temp_file:
       temp_file.write(include_vendor_file_template % ('  '.join(package_names)))
 

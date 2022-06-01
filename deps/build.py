@@ -72,7 +72,7 @@ exclude_unwind_tables=true
 """
 
 def v8deps():
-    spec = "solutions = %s" % gclient_sln
+    spec = f"solutions = {gclient_sln}"
     env = os.environ.copy()
     env["PATH"] = tools_path + os.pathsep + env["PATH"]
     subprocess.check_call(cmd(["gclient", "sync", "--spec", spec]),
@@ -84,12 +84,10 @@ def cmd(args):
 
 def os_arch():
     u = platform.uname()
-    return u[0].lower() + "_" + args.arch
+    return f"{u[0].lower()}_{args.arch}"
 
 def v8_arch():
-    if args.arch == "x86_64":
-        return "x64"
-    return args.arch
+    return "x64" if args.arch == "x86_64" else args.arch
 
 def apply_mingw_patches():
     v8_build_path = os.path.join(v8_path, "build")
@@ -102,7 +100,7 @@ def apply_mingw_patches():
     shutil.copy(zlib_src_gn, zlib_dst_gn)
 
 def apply_patch(patch_name, working_dir):
-    patch_path = os.path.join(deps_path, os_arch(), patch_name + ".patch")
+    patch_path = os.path.join(deps_path, os_arch(), f"{patch_name}.patch")
     subprocess.check_call(["git", "apply", "-v", patch_path], cwd=working_dir)
 
 def update_last_change():
@@ -134,9 +132,12 @@ def main():
     gnargs = gn_args % (is_debug, is_clang, arch, arch, symbol_level, strip_debug_info)
     gen_args = gnargs.replace('\n', ' ')
 
-    subprocess.check_call(cmd([gn_path, "gen", build_path, "--args=" + gen_args]),
-                        cwd=v8_path,
-                        env=env)
+    subprocess.check_call(
+        cmd([gn_path, "gen", build_path, f"--args={gen_args}"]),
+        cwd=v8_path,
+        env=env,
+    )
+
     subprocess.check_call([ninja_path, "-v", "-C", build_path, "v8_monolith"],
                         cwd=v8_path,
                         env=env)
